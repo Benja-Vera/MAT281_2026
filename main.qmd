@@ -1,0 +1,245 @@
+---
+lang: es
+title: "Aplicaciones de la Matemática en Ingeniería"
+subtitle: "MAT281 - Semestre Primavera 2026"
+author: "Benjamín Vera"
+format:
+    revealjs:
+        callout-icon: false
+        theme: dark
+---
+::: {.content-hidden}
+{{< include _macros.qmd >}}
+:::
+
+# Introducción al curso
+
+## Resumen
+
+El curso busca desarrollar herramientas para la modelación matemática de problemas de ingeniería. En particular, se estudiarán problemas del análisis de datos, así como herramientas computacionales con las que estos se resuelven.
+
+## Metodología
+
+- Se realizarán clases de cátedra durante ~2 meses.
+- Luego de esto, se da lugar al proyecto final.
+
+## Evaluaciones
+
+- Certamen a mitad de semestre (50%).
+- Proyecto final (50%).
+
+## Código
+
+Existen múltiples lenguajes/librerías/plataformas en las cuales se implementan los algoritmos de análisis y aprendizaje que veremos en este curso:
+
+- `pytorch` (`python`)
+- `tensorflow` (`python`)
+- `scikit-learn` (`python`)
+- `SciML` (`julia`)
+- `R`
+- `Fabric` / `Azure ML` / `Excel` (`Microsoft`)
+
+---
+
+Para intenciones pedagógicas, no se utilizará ninguna de estas librerías especializadas. Ya que mucha atención a los detalles de cada paquete puede distraer de la idea nuclear de los algoritmos.
+
+Se preferirá un repositorio de `python` construido dedicadamente para hacer legibles los algoritmos, sacrificando algo de rendimiento que no necesitamos aún.
+
+# Introducción al Aprendizaje Supervisado
+
+## El problema central de este curso
+
+::: {.callout-tip}
+## Problema de Aprendizaje Supervisado
+
+Dada una colección finita de *observaciones*  $\{ (x_i, y_i) \}_{i=1}^n \subseteq \mathcal{X} \times \mathcal{Y}$ y un nuevo $x \in \mathcal{X}$, predecir su correspondiente $y \in \mathcal{Y}$.
+:::
+
+Aquí, es común que a los $x_i$ se les llame *entradas / características* y a los $y_i$ se es llame *salidas / etiquetas*.
+
+::: {.callout-note}
+## Nota
+
+Obsérvese lo muy poco matemático que es este problema en su forma original.
+
+:::
+
+Normalmente tomaremos $\mathcal{X} = \mathbb{R}^d$ con $d$ grande (pensar $10^6$), e $\mathcal{Y} = \mathbb{R}$ o $\{ 0, 1 \}$ o $\{ 1, \dots, k \}$.
+
+## Desafíos de este problema {.smaller}
+
+- La correspondencia $y = f(x)$ puede no ser una función en el sentido clásico (determinista). Ya sea por ambigüedad en la clasificación o variables no observadas.
+- El modelo de predicción $f$ puede ser muy complejo (e.g. Redes neuronales) o incluso difícil de definir (e.g. Modelos de Lenguaje).
+- La escasez de buenos datos es común en aplicaciones.
+- La maldición de la dimensionalidad: Un $\mathcal{X}$ de dimensión muy grande puede introducir problemas.
+- La data con la que trabajamos y la data de aplicación pueden ser muy diferentes.
+- El criterio con el que se obtiene el predictor $f$ puede ser difícil de definir.
+
+## ¿Cómo formalizamos esto? {.smaller}
+
+La forma más común de formular matemáticamente este problema es *probabilista*. Es decir, se asume que los datos $\{ (x_i, y_i) \}_{i=1}^n$ son realizaciones de una misma variable aleatoria (es decir, son i.i.d.) y que su distribución es la misma en datos de *entrenamiento* y *validación*.
+
+Lo que haremos será entonces resolver problemas del tipo
+$$
+    \min_f\; \mathbb{E}[l(y, f(x))] .
+$$ {#eq-generic-unsupervised-learning-problem}
+
+::: {.callout-tip}
+
+## Definición: Algoritmo de aprendizaje
+
+Dados los elementos de este problema bien definidos, un *algoritmo de aprendizaje* es una función que dado el conjunto de datos $\{ (x_i, y_i) \}_{i=1}^n$, entrega la función resultante $f$ que resuelve  @eq-generic-unsupervised-learning-problem.
+
+:::
+
+
+## Conjuntos de datos
+
+En análisis de datos, es importante distinguir:
+
+- **Datos de entrenamiento (training):** Con respecto a los cuales se obtiene el predictor $f$.
+- **Datos de validación (validation):** Con los que se fijan *hiperparámetros* del proceso de entrenamiento.
+- **Datos de evaluación (testing):** Con los que se reporta el desempeño final del modelo escogido (solo se utilizan una vez!).
+
+## ¿De qué me sirve aprender la teoría?
+
+El proceso de aplicar un método de aprendizaje supervisado también se *debuguea* más allá de la programación misma. Se debe escoger un buen modelo entre varias opciones, fijar hiperparámetros correctamente y saber identificar causas de lo que podría ser un mal ajuste.
+
+Es valioso saber cuándo vale la pena utilizar cada método y por qué podría estar no dando los resultados esperados.
+
+# Preliminares teóricos
+
+## Límites teóricos
+
+Cuando la correspondencia entrada / salida no es determinista pero se busca un predictor $f$ que sí lo es, existen límites a lo que es posible lograr, aún con recursos computacionales infinitos. Estudiaremos estos antes de introducir detalles de implementación.
+
+Sea $p(x, y)$ la distribución de datos en $\mathcal{X} \times \mathcal{Y}$ con distribución marginal $p(x)$ en $\mathcal{X}$.
+
+## Función de pérdida
+
+Consideremos una función $l: \mathcal{Y} \times \mathcal{Y} \to \mathbb{R}$ en que $l(y, z)$ es el costo de predecir $z$ cuando la respuesta correcta es $y$. Algunos ejemplos son:
+
+- **Clasificación binaria:** $\mathcal{Y} = \{ 0, 1 \}$, $l(y, z) = \boldsymbol{1}_{y \neq z}$. A esto se le llama *pérdida 0-1*.
+- **Clasificación multicategoría:** $\mathcal{Y} = \{ 1, \dots, k \}$, $l(y, z) = \boldsymbol{1}_{y \neq z}$.
+- **Regresión:** $\mathcal{Y} = \mathbb{R}$, $l(y, z) = |y - z|^p$ ($p \in \{ 1, 2 \}$, pérdida *cuadrática* o *absoluta*).
+
+## Riesgo esperado
+
+Dada la función de pérdida $l$ y la distribución $p$, podemos definir:
+
+::: {.callout-tip}
+## Definición: Riesgo esperado
+
+Dada una función de predicción $f: \mathcal{X} \to \mathcal{Y}$, una función de pérdida $l : \mathcal{Y} \times \mathcal{Y} \to \mathbb{R}$ y una distribución de probabilidad $p$ sobre $\mathcal{X} \times \mathcal{Y}$, el *riesgo esperado* de $f$ se define por
+$$
+    \mathcal{R}(f) = \mathbb{E} \left[ l(y, f(x)) \right] = \int_{\mathcal{X} \times \mathcal{Y}} l(y, f(x)) \; \mathrm{d} p(x, y).
+$$
+A veces, esto se denota por $\mathcal{R}_{p}(f)$.
+
+:::
+
+## Riesgo empírico
+
+Cuando se cuenta con una colección de datos, es posible estimar el riesgo esperado mediante promedios:
+
+::: {.callout-tip}
+## Definición: Riesgo empírico
+
+Dada una función de predicción $f: \mathcal{X} \to \mathcal{Y}$, una función de pérdida $l: \mathcal{Y} \times \mathcal{Y} \to \mathbb{R}$ y datos $\{ (x_i, y_i) \}_{i=1}^n$, el riesgo empírico de $f$ se define por
+$$
+    \hat{\mathcal{R}}(f) = \frac{1}{n} \sum_{i=1}^n l(y_i, f(x_i)).
+$$
+:::
+
+::: {.callout-warning}
+## Ejercicio
+
+Describa el riesgo esperado para los problemas de clasificación binaria, multicategoría y regresión con sus respectivas pérdidas asociadas.
+:::
+
+## Predictor de Bayes
+
+Utilizando ley de esperanza total, el riesgo esperado se puede escribir como
+$$
+    \mathcal{R}(f) = \int_{\mathcal{X}} r(f(x') | x') \; \mathrm{d}p(x'),
+$$
+en que
+$$
+    r(z | x' ) = \mathbb{E}[l(y, z) | x = x'].
+$$
+Esto sugiere escoger $f(x')$ de manera óptima para cada $x'$ fijo.
+
+## Predictor de Bayes {.smaller}
+
+::: {.panel-tabset}
+
+### Proposición
+
+:::{.callout-note}
+## Proposición: Predictor de Bayes
+
+El riesgo esperado de minimiza en un predictor $f_*: \mathcal{X} \to \mathcal{Y}$ conocido como *predictor de Bayes*, que satisface:
+$$
+\begin{align*}
+\forall x' \in \mathcal{X} : f_*(x') &\in \argmin_{z \in \mathcal{Y}} \mathbb{E}[l(y, z) | x=x'] \\
+&= \argmin_{z \in \mathcal{Y}} r(z |x').
+\end{align*}
+$$
+El *riesgo de Bayes* es el valor mínimo y se define por
+$$
+    \mathcal{R}^* = \mathbb{E}_{x' \sim p} \left[ \inf_{z \in \mathcal{Y}} r(z | x') \right].
+$$
+Podemos definir también el *riesgo marginal* de un predictor $f$ como
+$$
+    \mathcal{R}(f) - \mathcal{R}^* \geq 0.
+$$
+:::
+
+### Demostración
+
+Dada $f$, tenemos
+$$
+\begin{align*}
+\mathcal{R}(f) - \mathcal{R}^* &= \mathcal{R}(f) - \mathcal{R}(f_*) \\
+&= \int_{\mathcal{X}} \left[ r(f(x') | x') - \min_{z \in \mathcal{Y}} r(z | x') \right] \; \mathrm{d}p(x') \\
+&\geq 0.
+\end{align*}
+$$
+:::
+
+## Ejercicio: Predictor de Bayes en clasificación binaria
+
+::: {.panel-tabset}
+
+### Ejercicio
+
+Describa el predictor de Bayes $f_*: \mathcal{X} \to \mathcal{Y} = \{ 0, 1 \}$ para el caso del problema de clasificación binaria con pérdida 0-1. Obtenga también una fórmula para el riesgo de Bayes y una condición bajo la cual $\mathcal{R}^* = 0$.
+
+### Solución
+
+A desarrollar.
+
+:::
+
+## Ejercicio: Predictor de Bayes en problema de regresión
+
+::: {.panel-tabset}
+
+### Ejercicio
+
+1. Sea $a \in R$ constante e $y$ variable aleatoria. Pruebe la ley de varianza total
+$$
+    \mathbb{E}[(y - a)^2] = \text{var}(y) + \left( \mathbb{E}[y] - a \right)^2.
+$$
+2. Pruebe que en el problema de regresión ($\mathcal{Y} = \mathbb{R}$) con pérdida cuadrática, el predictor de Bayes está dado por la esperanza condicional
+$$
+    f_*(x') = \mathbb{E}[y | x = x'].
+$$
+
+### Solución
+
+A desarrollar.
+
+:::
+
+# Aprendiendo de datos
