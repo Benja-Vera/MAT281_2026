@@ -20,12 +20,12 @@ El curso busca desarrollar herramientas para la modelación matemática de probl
 
 ## Metodología
 
-- Se realizarán clases de cátedra durante ~2 meses.
+- Se realizarán clases de cátedra durante ~3 meses.
 - Luego de esto, se da lugar al proyecto final.
 
 ## Evaluaciones
 
-- Certamen a mitad de semestre (50%).
+- Dos tareas a lo largo del semestre (50%).
 - Proyecto final (50%).
 
 ## Código
@@ -178,7 +178,7 @@ Esto sugiere escoger $f(x')$ de manera óptima para cada $x'$ fijo.
 :::{.callout-note}
 ## Proposición: Predictor de Bayes
 
-El riesgo esperado de minimiza en un predictor $f_*: \mathcal{X} \to \mathcal{Y}$ conocido como *predictor de Bayes*, que satisface:
+El riesgo esperado se minimiza en un predictor $f_*: \mathcal{X} \to \mathcal{Y}$ conocido como *predictor de Bayes*, que satisface:
 $$
 \begin{align*}
 \forall x' \in \mathcal{X} : f_*(x') &\in \argmin_{z \in \mathcal{Y}} \mathbb{E}[l(y, z) | x=x'] \\
@@ -221,7 +221,7 @@ A desarrollar.
 
 :::
 
-## Ejercicio: Predictor de Bayes en problema de regresión
+## Ejercicio: Predictor de Bayes en problema de regresión {.smaller}
 
 ::: {.panel-tabset}
 
@@ -243,3 +243,102 @@ A desarrollar.
 :::
 
 # Aprendiendo de datos
+
+## Idea {.smaller}
+
+Si bien el predictor de Bayes es el óptimo teórico y pareciera trivializar el problema de aprendizaje, en la práctica nunca se tiene acceso a la distribución $p$, sino que se debe trabajar exclusivamente a partir de los datos $(x_i, y_i)$, donde obtener el predictor de Bayes para un $x'$ no observado no es posible.
+
+Los algoritmos se clasifican en dos ideas principales:
+
+- Promedios locales ($k$ vecinos más cercanos)
+- Minimización de riesgo empírico (regresión logística, de mínimos cuadrados...)
+
+Hacemos a continuación un resumen de ambas clases.
+
+## Promedios locales {.smaller}
+
+Estos son algoritmos que buscan aproximar directamente el predictor de Bayes $f_*(x') = \mathbb{E}[y | x = x']$ (o $f_*(x') = \argmax_{z \in \mathcal{Y}} \mathbb{P}[y = z | x = x']$ en el caso binario) desde los datos empíricos. Esto suele requerir algún tipo de promedio local al encontrar datos que no tienen etiqueta, pero cercanos a datos etiquetados.
+
+Por ejemplo, tómese el clasificador de los *$k$ vecinos más cercanos* (KNN). En que $\mathcal{Y} = \{ \pm 1 \}$ y dadas las observaciones $((x_i, y_i))_{i=1}^{n}$ y un nuevo $x^{\text{test}}$, este se clasifica por voto mayoritario entre sus $k$ vecinos más cercanos.
+
+![ejemplo de clasificador de vecinos más cercanos](img/knn.png)
+
+## Balance del algoritmo KNN
+
+| Ventajas | Desventajas |
+| :--- | :--- |
+| No hay entrenamiento | La inferencia es costosa |
+| Implementación sencilla | Maldición de la dimensionalidad |
+| En dimensión baja puede tener buen desempeño | Depende de la función distancia que se escoja |
+|  | El valor $k$ es un hiperparámetro a elegir |
+
+## Minimización de riesgo empírico {.smaller}
+
+Aquí, la estrategia es diferente. Se considera una familia parametrizada de funciones de predicción (modelos):
+$$
+f_{\theta}: \mathcal{X} \to \mathcal{Y}, \qquad (\theta \in \Theta)
+$$
+(Aquí $\Theta$ es subconjunto de un e.v.)
+
+Se busca entonces minimizar el riesgo empírico con respecto a $\theta$:
+$$
+    \hat{\mathcal{R}}(f_\theta) = \frac{1}{n} \sum_{i=1}^n l(y_i, f_\theta(x_i)).
+$$
+De aquí, se obtiene un estimador $\hat{\theta} = \argmin_{\theta \in \Theta} \hat{\mathcal{R}}(f_\theta)$ y una función de predicción $f_{ \hat{\theta} }$.
+
+## Ejemplo (mínimos cuadrados lineal)
+
+Podemos tomar $l(y, z) = (y - z)^2$ y
+$$
+    f_{\theta}(x) = \theta^{\top} \phi(x)
+$$
+en que $\phi : \mathcal{X} \to \mathbb{R}^d$ es una función preestablecida (función de características). Esto define el riesgo empírico:
+$$
+    \frac{1}{n} \sum_{i=1}^n (y_i - \theta^{\top}\phi(x_i))^2,
+$$
+cuya minimización es un problema convexo. Otros ejemplos de modelos incluyen redes neuronales u otras aproximaciones no lineales.
+
+# Vecinos más cercanos
+
+## Ejemplo ilustrativo
+
+A continuación, hacemos una regresión de vecinos más cercanos donde estimamos la función
+$$
+    f(x) = x\cdot(1 - x)
+$$
+en base a datos $x_i$ de distribución uniforme en $[0, 1]$ y datos $y_i$ obtenidos con una perturbación gaussiana.
+
+## Código
+
+```{.python}
+import numpy as np
+from scipy.stats import uniform, norm
+from matplotlib import pyplot as plt
+
+from mla.knn import KNNRegressor
+
+# Data de validación
+f = lambda x : x * (1 - x)
+x = np.linspace(0, 1, num=50)
+y = f(x)
+
+# Data de entrenamiento
+x_train = uniform.rvs(0, 1, size = 500)
+y_train = f(x_train) + norm.rvs(size=500, scale=0.05)
+
+d = lambda x,y : np.abs(x - y)
+
+# Crear y evaluar modelos para diferentes k
+K = [5, 50, 200]
+models = [KNNRegressor(k=k, distance_func=d) for k in K]
+Y = []
+for model in models:
+    model.fit(x_train, y_train)
+    Y.append(model.predict(x))
+
+```
+
+
+## Resultados
+
+![Simulación de KNN](img/knn-simulation.png)
