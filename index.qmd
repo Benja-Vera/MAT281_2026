@@ -227,10 +227,10 @@ A desarrollar.
 
 ### Ejercicio
 
-1. Sea $a \in R$ constante e $y$ variable aleatoria. Pruebe la ley de varianza total
+1. Sea $a \in \mathbb{R}$ constante e $y$ variable aleatoria. Pruebe la ley de varianza total
 $$
     \mathbb{E}[(y - a)^2] = \text{var}(y) + \left( \mathbb{E}[y] - a \right)^2.
-$$
+$${#eq-total-variance-law}
 2. Pruebe que en el problema de regresión ($\mathcal{Y} = \mathbb{R}$) con pérdida cuadrática, el predictor de Bayes está dado por la esperanza condicional
 $$
     f_*(x') = \mathbb{E}[y | x = x'].
@@ -286,7 +286,7 @@ $$
 $$
 De aquí, se obtiene un estimador $\hat{\theta} = \argmin_{\theta \in \Theta} \hat{\mathcal{R}}(f_\theta)$ y una función de predicción $f_{ \hat{\theta} }$.
 
-## Ejemplo (mínimos cuadrados lineal)
+## Ejemplo (mínimos cuadrados lineal) {.smaller}
 
 Podemos tomar $l(y, z) = (y - z)^2$ y
 $$
@@ -306,10 +306,7 @@ A continuación, hacemos una regresión de vecinos más cercanos donde estimamos
 $$
     f(x) = x\cdot(1 - x)
 $$
-en base a datos $x_i$ de distribución uniforme en $[0, 1]$ y datos $y_i$ obtenidos con una perturbación gaussiana.
-
-## Código
-
+en base a datos $x_i$ de distribución uniforme en $[0, 1]$ y datos $y_i$ obtenidos con una perturbación gaussiana. ## Código
 ```{.python}
 import numpy as np
 from scipy.stats import uniform, norm
@@ -341,4 +338,419 @@ for model in models:
 
 ## Resultados
 
-![Simulación de KNN](img/knn-simulation.png)
+![Simulación de KNN](img/knn-simulation.png){#fig-knn-simulation}
+
+## Resultados
+
+![Error cuadrático medio de KNN](img/knn-mse.png){#fig-knn-mse}
+
+## El valor del ingeniero matemático
+
+Mirando la @fig-knn-mse, se nos ocurre que sería útil obtener (o más bien estimar) la curva descrita. En términos matemáticos, dado $x \in \mathcal{X}$, buscamos una cota para
+$$
+    \mathbb{E}\left[ (\hat{f}(x) - f_*(x))^2 \; | \; x_1, \dots, x_n \right].
+$$
+La dependencia de esta cota con respecto a $k$ puede servir como heurística para elegir buenos valores en la práctica.
+
+::: {.callout-warning}
+### Nota
+
+Pero no todo son resultados concretos! Este ejercicio también nos sirve para comprender el tipo de problemas en que KNN tiene sentido como predictor.
+:::
+
+## Marco general {.smaller}
+
+El algoritmo KNN es parte de un marco más general donde los predictores son una combinación lineal de las etiquetas observadas con pesos dependientes de la entrada:
+$$
+    \hat{f}(x) = \sum_{i=1}^n \hat{w}_i(x) y_i.
+$$
+En el caso de KNN, sea $\Delta$ una distancia en $\mathcal{X}$ y, dada una observación $x \in \mathcal{X}$, ordenamos las entradas $x_i$ de modo que
+$$
+    \Delta(x_{i_1(x)}, x) \leq \Delta(x_{i_2(x)}, x) \leq \dots \leq \Delta(x_{i_n(x)}, x).
+$$
+El algoritmo KNN define entonces
+$$
+    \hat{w}_i(x) = \begin{cases}
+        \frac{1}{k}, & i \in \{ i_1(x), \dots, i_k(x) \}, \\
+0, & i \notin \{ i_1(x), \dots, i_k(x) \}.
+    \end{cases}
+$$
+
+## Hipótesis para el análisis
+
+Para simplificar, hacemos dos hipótesis que pueden ser debilitadas considerablemente
+
+1. **Ruido acotado:** Existe $\sigma \geq 0$ tal que
+$$
+    \left( y - \mathbb{E}[y \; | \; x] \right)^2 \leq \sigma^2, \text{ c.s.}
+$$
+2. **Regularidad del modelo:** La función $f_{*}(x) = \mathbb{E}[y\; | \; x]$ es $B$-Lipschitz con respecto a la distancia $\Delta$.
+
+## Obtención de la cota general {.smaller .scrollable}
+
+::: {.panel-tabset}
+
+
+### Resultado
+
+Bajo las hipótesis anteriores, podemos obtener la siguiente cota para el error cuadrático medio:
+$$
+    \mathbb{E}[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n] \leq B^2 \sum_{i=1}^n \hat{w}_i(x) \Delta(x_i, x)^2 + \sigma^2 \sum_{i=1}^n  \hat{w}_i(x)^2.
+$$
+El primer término representa el sesgo del estimador, mientras que el segundo representa su varianza.
+
+### Derivación
+
+Para descomponer el MSE entre sesgo y varianza, se utiliza la ley de varianza total (ver @eq-total-variance-law)
+$$
+\begin{align*}
+& \mathbb{E}\left[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n \right] \\
+=& \left( \mathbb{E}[\hat{f}(x) \;|\; x_1, \dots, x_n] - f_*(x) \right)^2 + \text{var}[\hat{f}(x) \;|\; x_1, \dots, x_n] \\
+=& \mathbb{E}[\hat{f}(x) - f_*(x) \;|\; x_1, \dots, x_n]^2 + \sum_{i=1}^n \hat{w}_i(x)^2 \mathbb{E}[(y_i - \mathbb{E}[y | x_i])^2 \;|\; x_i]
+\end{align*}
+$$
+El término bajo la primera esperanza se puede escribir como sigue
+$$
+\begin{align*}
+&\hat{f}(x) - f_*(x) \\
+=& \sum_{i=1}^n y_i \hat{w}_i(x) - \mathbb{E}[y \;|\; x] \\
+=& \sum_{i=1}^n \hat{w}_i(x) \left[ y_i - \mathbb{E}[y \;|\; x_i] \right] + \sum_{i=1}^n \hat{w}_i(x) \left[ \mathbb{E}[y \;|\; x_i] - \mathbb{E}[y \;|\; x] \right] \\
+=& \sum_{i=1}^n \hat{w}_i(x) \left[ y_i - \mathbb{E}[y \;|\; x_i] \right] + \sum_{i=1}^n \hat{w}_i(x) \left[ f_*(x_i) - f_*(x) \right].
+\end{align*}
+$$
+Nótese que el primer término tiene esperanza nula al condicionar a los $x_i$, mientras que el segundo término es determinista. Obtenemos entonces una expresión que podemos acotar mediante las hipótesis:
+$$
+\begin{align*}
+& \mathbb{E}\left[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n \right] \\
+=& \left[ \sum_{i=1}^n \hat{w}_i(x) \left[ f_*(x_i) - f_*(x) \right] \right]^2 + \sum_{i=1}^n \hat{w}_i(x)^2 \mathbb{E}[(y_i - \mathbb{E}[y | x_i])^2 \;|\; x_i] \\
+\leq & \left[ \sum_{i=1}^n \hat{w}_i(x) B \Delta(x_i, x) \right]^2 + \sigma^2 \sum_{i=1}^n \hat{w}_i(x)^2 \\
+\leq & B^2 \sum_{i=1}^n \hat{w}_i(x) \Delta(x_i, x)^2 + \sigma^2 \sum_{i=1}^n \hat{w}_i(x)^2. \\
+\end{align*}
+$$
+La última desigualdad se tiene por desigualdad de Jensen, por convexidad de la función $x \mapsto x^2$. Esto es lo que se buscaba obtener.
+
+:::
+
+## Caso de KNN {.smaller .scrollable}
+
+Reemplazando los $\hat{w}_i(x)$ para el algoritmo de KNN, se obtiene la cota
+$$
+\begin{align*}
+    \mathbb{E}[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n] &\leq \sigma^2 \sum_{i=1}^n  \hat{w}_i(x)^2 + B^2 \sum_{i=1}^n \hat{w}_i(x) \Delta(x_i, x)^2 \\
+&= \sigma^2 k \cdot \left( \frac{1}{k^2} \right) + B^2 \frac{1}{k}\sum_{j=1}^{k} \Delta(x_{i_j(x)}, x)^2 \\
+&= \frac{\sigma^2}{k} + \frac{B^2}{k} \sum_{j=1}^{k} \Delta(x_{i_j(x)}, x)^2 .
+\end{align*}
+$$
+El último término corresponde al promedio empírico de los cuadrados de las distancias entre $x$ y sus $k$ vecinos más cercanos. Buscamos ahora acotar esto en términos de los datos del problema.
+
+::: {.callout-warning}
+### Nota
+
+Este es prácticamente un problema de matemática pura.
+
+:::
+
+## Lemas de distancia esperada {.smaller}
+
+:::{.callout-note}
+
+### Lema 1: Distancia esperada al vecino más cercano
+
+Considere $n+1$ puntos $x_1, \dots, x_{n+1}$ obtenidos de una distribución de probabilidad con soporte compacto $\mathcal{X} \subseteq \mathbb{R}^d$. Entonces, el valor esperado del cuadrado de la distancia $l_{\infty}$ entre $x_{n+1}$ y su vecino más cercano está acotada por
+$$
+    4 \frac{\text{diam}(\mathcal{X})^2}{n^{ \frac{2}{d} }}.
+$$
+:::
+
+:::{.callout-note}
+### Lema 2: Distancia esperada al $k$-ésimo vecino más cercano
+Bajo las hipótesis anteriores, el valor esperado del cuadrado de la distancia $l_{\infty}$ entre $x_{n+1}$ y su $k$-ésimo vecino más cercano está acotada por
+$$
+    8 \text{diam}(\mathcal{X})^2 \left( \frac{2k}{n} \right)^{ \frac{2}{d} }.
+$$
+:::
+
+## Conclusión {.smaller}
+$$
+    \mathbb{E}[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n] \leq \frac{\sigma^2}{k} + 8B^2 \text{diam}(\mathcal{X})^2 \left( \frac{2k}{n} \right)^{ \frac{2}{d}}.
+$$
+
+- Al aumentar los vecinos $k$, el la varianza decrece pero el sesgo aumenta.
+- A mayor dimensionalidad, se introduce mayor sesgo (tener en mente que $\frac{k}{n} \ll 1$). Esto se conoce como *la maldición de la dimensionalidad* y en las próximas clases veremos métodos para mitigarla.
+
+# Regresión lineal de mínimos cuadrados
+
+## Introducción
+
+La regresión lineal, pese a sonar simple, es una herramienta tremendamente poderosa, flexible y bien entendida por la teoría. La utilizaremos como un ejemplo insigne que captura muchos de los balances propios del aprendizaje automático moderno.
+
+## Problema de mínimos cuadrados {.smaller}
+
+Volviendo al aprendizaje supervisado, supongamos que disponemos de observaciones $(x_i, y_i) \in \mathcal{X} \times \mathcal{Y}, (i=1, \dots, n)$. Dado un nuevo $x \in \mathcal{X}$, buscamos predecir su correspondiente $y \in \mathcal{Y}$ con una función $f$ tal que $y \approx f(x)$.
+
+Para regresión, tomamos $\mathcal{Y} = \mathbb{R}$ y la función de pérdida $l(y, z) = (y - z)^2$. Ya sabemos que el predictor óptimo es $f_*(x) = \mathbb{E}[y | x]$, pero no podemos evaluar esto de manera exacta solo con datos.
+
+La regresión de mínimos cuadrados consiste en la categoría (nueva en este curso) de métodos de *minimización de riesgo empírico*. Dada una familia parametrizada de funciones $f_\theta: \mathcal{X} \to \mathcal{Y} = \mathbb{R}$, en que $\theta \in \Theta$ es un parámetro, se minimiza la cantidad
+$$
+    \frac{1}{n}\sum_{i=1}^n (y_i - f_\theta(x_i))^2.
+$$
+Con esto, se obtiene un minimizador $\hat{\theta}$ (aleatorio!!) y el predictor óptimo $f_{ \hat{\theta}}$.
+
+## Caso de mínimos cuadrados lineal {.smaller .scrollable}
+
+Tomemos en esta clase el caso en que la función $(x, \theta) \mapsto f_\theta(x)$ es lineal en $\theta$ y por lo tanto $\Theta = \mathbb{R}^d$ para algún $d$.
+
+::: {.callout-warning}
+
+### Nota
+
+Esto no significa ser lineal en $x$.
+
+:::
+
+Tenemos entonces la forma
+$$
+    f_\theta(x) = \sum_{i=1}^{d} \alpha_i(x) \theta_i.
+$$
+Esto requiere $d$ funciones ya dadas $\alpha_i : \mathcal{X} \to \mathbb{R}$ las cuales podemos agrupar en un vector
+$$
+    \phi(x) = (\alpha_1(x), \dots, \alpha_d(x)),
+$$
+de donde
+$$
+    f_\theta(x) = \phi(x)^{\top}\theta.
+$$
+Se minimiza entonces el riesgo empírico
+$$
+    \hat{\mathcal{R}} = \frac{1}{n} \sum_{i=1}^n (y_i - \phi(x_i)^{\top} \theta)^2.
+$$
+
+## Ejemplo y notación matricial
+
+::: {.callout-tip}
+
+### Ejemplo
+
+Si los $\alpha_i$ son monomios, tenemos $\phi(x) = (1, x, x^2, x^3, \dots, x^d)$, de modo que los predictores $f_\theta(x)$ son polinomios de grado $\leq d$.
+
+:::
+
+Si se define $y = (y_1, \dots, y_n)$ como el vector de observaciones y se agrupan los $(\phi(x_i))_{i=1}^{n}$ como filas de una matriz $\Phi \in \mathbb{R}^{n \times d}$, el riesgo empírico se puede escribir como
+$$
+    \hat{\mathcal{R}}(\theta) = \frac{1}{n} \norm{y - \Phi \theta}_2^2.
+$$ {#eq-LS-empirical-risk}
+
+## Estimador de mínimos cuadrados ordinario {.smaller .scrollable}
+
+Asumamos que $\Phi$ tiene rango completo con $n \geq d$ (suficientes observaciones), esto implica que $\Phi^{\top}\Phi \in \mathbb{R}^{d \times d}$ es invertible.
+
+::: {.callout-tip}
+
+### Definición: Estimador OLS
+
+El estimador de mínimos cuadrados ordinario se define como el único minimizador de @eq-LS-empirical-risk.
+
+:::
+
+::: {.panel-tabset}
+
+
+### Ejercicio
+
+Pruebe que el minimizador $\hat{\theta}$ se calcula como
+$$
+    \hat{\theta} = (\Phi^{\top}\Phi)^{-1} \Phi^{\top}y.
+$$
+
+### Solución
+
+Ya que la optimización es sin restricciones, el minimizador está dado por la condición
+ $\nabla \mathcal{R}( \hat{\theta}) = 0$. Expandiendo el cuadrado, tenemos
+$$
+\begin{align*}
+    \hat{\mathcal{R}}( \theta) &= \frac{1}{n} \left( \norm{y}_2^2 - 2 \theta^{\top} \Phi^{\top} y + \theta^{\top} \Phi^{\top} \Phi \theta \right), \\
+\nabla \hat{\mathcal{R}}( \theta) &= \frac{2}{n} \left( \Phi^{\top} \Phi \theta - \Phi^{\top} y \right).
+\end{align*}
+$$
+Igualando a cero y usando la invertibilidad,
+$$
+\begin{align*}
+\Phi^{\top} \Phi \hat{\theta} &= \Phi^{\top} y \\
+\hat{\theta} &= (\Phi^{\top} \Phi)^{-1} \Phi^{\top} y.
+\end{align*}
+$$
+
+:::
+
+## Interpretación y aspectos numéricos {.smaller}
+
+- El vector $\Phi \hat{\theta} \in \mathbb{R}^n$ es la proyección ortogonal de $y$ sobre $\text{Im}(\Phi)$.
+- Entonces, el estimador OLS entrega la única solución del sistema lineal $\Phi\theta = \overline{y}$ en que $\overline{y}$ es la proyección de $y$ sobre $\text{Im}(\Phi)$.
+- Invertir la matriz $\Phi^{\top}\Phi$ no es muy preferible en la práctica, se suelen preferir métodos eficientes como factorización o descenso.
+
+::: {.callout-warning}
+
+### Comentario
+
+Se aconseja evitar funciones como `np.linalg.inv(A)`
+
+:::
+
+## Análisis estadístico de OLS
+
+Hemos discutido cómo obtener el estimador OLS $\hat{\theta}$, pero aún no sabemos qué tan bueno es realmente, o qué factores influyen en su desempeño. Esto estudiaremos ahora.
+
+## Diseño fijo y aleatorio {.smaller}
+
+Hay dos escenarios clásicos para este análisis
+
+- **Diseño aleatorio:** El clásico de aprendizaje supervisado que hemos visto hasta ahora, donde tanto entradas como salidas son aleatorias.
+- **Diseño fijo:** Se asume que $(x_1, \dots, x_n)$ no son aleatorios aunque $(y_1, \dots, y_n)$ sí lo son. En otras palabras, nos interesa predecir solo las salidas de estos puntos (*denoising*). Esto hace a $\Phi$ determinista y se minimiza
+$$
+\begin{align*}
+\mathcal{R}(\theta) &= \mathbb{E}_y \left[ \frac{1}{n}\sum_{i=1}^n (y_i - \phi(x_i)^{\top} \theta)^2 \right] \\
+&= \mathbb{E}_y \left[ \frac{1}{n} \norm{y - \Phi \theta}_2^2 \right].
+\end{align*}
+$$
+
+## Hipótesis
+
+Tomamos diseño fijo y suponemos $\hat{\Sigma} = \frac{1}{n}\Phi^{\top}\Phi$ invertible. También asumimos lo siguiente sobre la distribución:
+
+- Existe $\theta_* \in \mathbb{R}^d$ tal que la relación entre $x_i$ e $y_i$ toma la forma
+$$
+    y_i = \phi(x_i)^{\top}\theta_* + \epsilon_i.
+$$
+- Además, $(\epsilon_i)_{i=1}^n$ son independientes con $\mathbb{E}[\epsilon_i] =0$ y $\mathbb{E}[\epsilon_i^2] = \sigma^2$.
+
+## Descomposición de riesgo {.smaller .scrollable}
+
+Sea $\mathcal{R}^*$ el valor mínimo de $\mathcal{R}(\theta)$ sobre $\theta \in \mathbb{R}^d$. Entones, tenemos lo siguiente:
+
+::: {.panel-tabset}
+
+
+### Proposición
+
+Para cada $\theta \in \mathbb{R}^d$, tenemos $\mathcal{R}^* = \sigma^2$ y
+$$
+    \mathcal{R}(\theta) - \mathcal{R}^* = \norm{\theta - \theta_*}_{ \hat{\Sigma}}^2,
+$$
+en que $\hat{\Sigma} = \frac{1}{n} \Phi^{\top}\Phi$ y $\norm{\theta}_{ \hat{\Sigma}}^2 = \theta^{\top} \hat{\Sigma} \theta$. Si ahora $\hat{\theta}$ es aleatorio, entonces
+$$
+    \mathbb{E}[\mathcal{R}( \hat{\theta})] - \mathcal{R}^* = \norm{\mathbb{E}[ \hat{\theta}] - \theta_*}_{ \hat{\Sigma}}^{2} + \mathbb{E} \left[ \norm{ \hat{\theta} - \mathbb{E}[ \hat{\theta}] }_{ \hat{\Sigma}}^{2} \right].
+$$
+
+### Demostración
+
+Ya que $y = \Phi \theta_* + \epsilon$, tenemos
+$$
+\begin{align*}
+\mathcal{R}(\theta) &= \mathbb{E}_y \left[ \frac{1}{n} \norm{y - \Phi \theta}_2^2 \right] \\
+&= \mathbb{E}_\epsilon \left[ \frac{1}{n} \norm{ \Phi(\theta_* - \theta) + \epsilon}_2^2 \right] \\
+&= \frac{1}{n} \mathbb{E}_\epsilon \left[ \norm{ \Phi(\theta_* - \theta)}_2^2 + \norm{\epsilon}_2^2 + 2 ( \Phi(\theta_* - \theta))^{\top} \epsilon \right] \\
+&= \sigma^2 + \frac{1}{n} (\theta_* - \theta)^{\top} \Phi^{\top} \Phi(\theta_* - \theta) \\
+&= \sigma^2 + \norm{\theta_* -\theta}_{ \hat{\Sigma}}^2.
+\end{align*}
+$$
+Esta expresión se minimiza en $\theta_*$ con valor mínimo $\mathcal{R}^* = \sigma^2$ y se tiene el riesgo marginal pedido.
+
+Si ahora se supone $\hat{\theta}$ aleatorio, se puede emplear lo anterior junto con la ley de varianza total para vectores:
+$$
+    \mathbb{E} \left[ \norm{z - a}_M^2 \right] = \norm{ \mathbb{E}[z] - a }_M^2 + \mathbb{E} \left[ \norm{z - \mathbb{E}[z]}_M^2 \right]
+$$
+para concluir.
+
+:::
+
+## Comentario
+
+La descomposición anterior nos dice que para cualquier estimador $\hat{\theta}$ (como OLS, pero no solo ese!), nos basta conocer su esperanza y varianza para deducir su riesgo marginal asociado.
+
+Estudiaremos entonces las propiedades del estimador
+$$
+    \hat{\theta} = (\Phi^{\top}\Phi)^{-1} \Phi^{\top} y = \hat{\Sigma}^{-1} \left( \frac{1}{n}\Phi^{\top}y \right)
+$$
+con respecto al modelo
+$$
+    y = \Phi\theta_* + \epsilon.
+$$
+
+## Propiedades del estimador OLS {.smaller .scrollable}
+
+::: {.panel-tabset}
+
+
+### Proposición
+
+1. $\theta$ es insesgado: $\mathbb{E}[ \hat{\theta}] = \theta_*$.
+2. $\hat{\theta}$ tiene varianza dada por
+$$
+    \text{var}( \hat{\theta}) = \mathbb{E} \left[ ( \hat{\theta} - \theta_*)( \hat{\theta} - \theta_*)^{\top} \right] = \frac{\sigma^2}{n} \hat{\Sigma}^{-1}.
+$$
+
+### Demostración
+
+1. Por la linealidad de la esperanza,
+$$
+\begin{align*}
+\mathbb{E}[ \hat{\theta}] &= (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \mathbb{E}[y] \\
+&= (\Phi^{\top}\Phi)^{-1} \Phi^{\top}\Phi \theta_* \\
+&= \theta_*
+\end{align*}
+$$
+2. Vemos que
+$$
+\begin{align*}
+\hat{\theta} - \theta &= (\Phi^{\top}\Phi)^{-1} \Phi^{\top} (\Phi \theta_* + \epsilon) - \theta_* \\
+&= (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \epsilon.
+\end{align*}
+$${#eq-LS-analysis-identity}
+Ya que $\mathbb{E}[\epsilon \epsilon^{\top}] = \sigma^2 I$, tenemos
+$$
+\begin{align*}
+\text{var}( \hat{\theta}) &= \mathbb{E} \left[ (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \epsilon \epsilon^{\top} \Phi( \Phi^{\top} \Phi)^{-1} \right] \\
+&= \sigma^2 (\Phi^{\top}\Phi)^{-1} = \frac{\sigma^2}{n} \hat{\Sigma}^{-1}.
+\end{align*}
+$$
+
+:::
+
+## Conclusión {.smaller .scrollable}
+
+Juntando lo anterior, obtenemos lo siguiente
+
+::: {.panel-tabset}
+
+
+### Proposición
+
+El riesgo marginal del estimador OLS está dado por
+$$
+    \mathbb{E}[\mathcal{R}( \hat{\theta})] - \mathcal{R}^* = \frac{\sigma^2d}{n}.
+$$
+
+### Demostración
+
+Usando @eq-LS-analysis-identity,
+$$
+\begin{align*}
+\mathbb{E}[\mathcal{R}( \hat{\theta})] - \mathcal{R}^* &= \mathbb{E} \left[ \norm{ (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \epsilon }_{ \hat{\Sigma}}^2 \right] \\
+&= \frac{1}{n} \mathbb{E} \left[ \epsilon^{\top} \Phi (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \Phi (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \epsilon \right] \\
+&= \frac{1}{n} \mathbb{E} \left[ \epsilon^{\top} \underbrace{ \Phi (\Phi^{\top}\Phi)^{-1} \Phi^{\top} }_{=\Pi} \epsilon \right] \\
+&= \frac{1}{n} \mathbb{E} [\epsilon^{\top} \Pi \epsilon] \\
+&= \frac{1}{n} \mathbb{E}[ \text{tr} (\Pi \epsilon\epsilon^{\top})] \\
+&= \frac{\sigma^2}{n} \text{tr}(\Pi) = \frac{\sigma^2d}{n}.
+\end{align*}
+$$
+
+:::
+
+::: {.callout-warning}
+
+### Nota
+
+Se aprecia maldición de la dimensionalidad.
+
+:::
+

@@ -445,9 +445,9 @@ Benjamín Vera
 <div class="tab-content">
 <div id="tabset-3-1">
 <ol type="1">
-<li>Sea <span class="math inline">\(a \in R\)</span> constante e <span class="math inline">\(y\)</span> variable aleatoria. Pruebe la ley de varianza total <span class="math display">\[
+<li>Sea <span class="math inline">\(a \in \mathbb{R}\)</span> constante e <span class="math inline">\(y\)</span> variable aleatoria. Pruebe la ley de varianza total <span id="eq-total-variance-law"><span class="math display">\[
 \mathbb{E}[(y - a)^2] = \text{var}(y) + \left( \mathbb{E}[y] - a \right)^2.
-\]</span></li>
+\qquad(2)\]</span></span></li>
 <li>Pruebe que en el problema de regresión (<span class="math inline">\(\mathcal{Y} = \mathbb{R}\)</span>) con pérdida cuadrática, el predictor de Bayes está dado por la esperanza condicional <span class="math display">\[
 f_*(x') = \mathbb{E}[y | x = x'].
 \]</span></li>
@@ -522,7 +522,7 @@ f_{\theta}: \mathcal{X} \to \mathcal{Y}, \qquad (\theta \in \Theta)
     \hat{\mathcal{R}}(f_\theta) = \frac{1}{n} \sum_{i=1}^n l(y_i, f_\theta(x_i)).
 \]</span> De aquí, se obtiene un estimador <span class="math inline">\(\hat{\theta} = \mathop{\mathrm{argmin}}_{\theta \in \Theta} \hat{\mathcal{R}}(f_\theta)\)</span> y una función de predicción <span class="math inline">\(f_{ \hat{\theta} }\)</span>.</p>
 </section>
-<section id="ejemplo-mínimos-cuadrados-lineal" class="slide level2">
+<section id="ejemplo-mínimos-cuadrados-lineal" class="slide level2 smaller">
 <h2>Ejemplo (mínimos cuadrados lineal)</h2>
 <p>Podemos tomar <span class="math inline">\(l(y, z) = (y - z)^2\)</span> y <span class="math display">\[
     f_{\theta}(x) = \theta^{\top} \varphi(x)
@@ -539,10 +539,7 @@ f_{\theta}: \mathcal{X} \to \mathcal{Y}, \qquad (\theta \in \Theta)
 <h2>Ejemplo ilustrativo</h2>
 <p>A continuación, hacemos una regresión de vecinos más cercanos donde estimamos la función <span class="math display">\[
     f(x) = x\cdot(1 - x)
-\]</span> en base a datos <span class="math inline">\(x_i\)</span> de distribución uniforme en <span class="math inline">\([0, 1]\)</span> y datos <span class="math inline">\(y_i\)</span> obtenidos con una perturbación gaussiana.</p>
-</section>
-<section id="código-1" class="slide level2">
-<h2>Código</h2>
+\]</span> en base a datos <span class="math inline">\(x_i\)</span> de distribución uniforme en <span class="math inline">\([0, 1]\)</span> y datos <span class="math inline">\(y_i\)</span> obtenidos con una perturbación gaussiana. ## Código</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href=""></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href=""></a><span class="im">from</span> scipy.stats <span class="im">import</span> uniform, norm</span>
 <span id="cb1-3"><a href=""></a><span class="im">from</span> matplotlib <span class="im">import</span> pyplot <span class="im">as</span> plt</span>
@@ -571,8 +568,399 @@ f_{\theta}: \mathcal{X} \to \mathcal{Y}, \qquad (\theta \in \Theta)
 <section id="resultados" class="slide level2">
 <h2>Resultados</h2>
 
+<img data-src="img/knn-simulation.png" class="r-stretch quarto-figure-center" id="fig-knn-simulation"><p class="caption">
+Figura&nbsp;1: Simulación de KNN
+</p></section>
+<section id="resultados-1" class="slide level2">
+<h2>Resultados</h2>
 
-<img data-src="img/knn-simulation.png" class="r-stretch quarto-figure-center"><p class="caption">Simulación de KNN</p></section></section>
+<img data-src="img/knn-mse.png" class="r-stretch quarto-figure-center" id="fig-knn-mse"><p class="caption">
+Figura&nbsp;2: Error cuadrático medio de KNN
+</p></section>
+<section id="el-valor-del-ingeniero-matemático" class="slide level2">
+<h2>El valor del ingeniero matemático</h2>
+<p>Mirando la <a href="#/fig-knn-mse" class="quarto-xref">Figura&nbsp;2</a>, se nos ocurre que sería útil obtener (o más bien estimar) la curva descrita. En términos matemáticos, dado <span class="math inline">\(x \in \mathcal{X}\)</span>, buscamos una cota para <span class="math display">\[
+    \mathbb{E}\left[ (\hat{f}(x) - f_*(x))^2 \; | \; x_1, \dots, x_n \right].
+\]</span> La dependencia de esta cota con respecto a <span class="math inline">\(k\)</span> puede servir como heurística para elegir buenos valores en la práctica.</p>
+<div class="callout callout-warning no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Nota</strong></p>
+</div>
+<div class="callout-content">
+<p>Pero no todo son resultados concretos! Este ejercicio también nos sirve para comprender el tipo de problemas en que KNN tiene sentido como predictor.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="marco-general" class="slide level2 smaller">
+<h2>Marco general</h2>
+<p>El algoritmo KNN es parte de un marco más general donde los predictores son una combinación lineal de las etiquetas observadas con pesos dependientes de la entrada: <span class="math display">\[
+    \hat{f}(x) = \sum_{i=1}^n \hat{w}_i(x) y_i.
+\]</span> En el caso de KNN, sea <span class="math inline">\(\Delta\)</span> una distancia en <span class="math inline">\(\mathcal{X}\)</span> y, dada una observación <span class="math inline">\(x \in \mathcal{X}\)</span>, ordenamos las entradas <span class="math inline">\(x_i\)</span> de modo que <span class="math display">\[
+    \Delta(x_{i_1(x)}, x) \leq \Delta(x_{i_2(x)}, x) \leq \dots \leq \Delta(x_{i_n(x)}, x).
+\]</span> El algoritmo KNN define entonces <span class="math display">\[
+    \hat{w}_i(x) = \begin{cases}
+        \frac{1}{k}, &amp; i \in \{ i_1(x), \dots, i_k(x) \}, \\
+0, &amp; i \notin \{ i_1(x), \dots, i_k(x) \}.
+    \end{cases}
+\]</span></p>
+</section>
+<section id="hipótesis-para-el-análisis" class="slide level2">
+<h2>Hipótesis para el análisis</h2>
+<p>Para simplificar, hacemos dos hipótesis que pueden ser debilitadas considerablemente</p>
+<ol type="1">
+<li><strong>Ruido acotado:</strong> Existe <span class="math inline">\(\sigma \geq 0\)</span> tal que <span class="math display">\[
+\left( y - \mathbb{E}[y \; | \; x] \right)^2 \leq \sigma^2, \text{ c.s.}
+\]</span></li>
+<li><strong>Regularidad del modelo:</strong> La función <span class="math inline">\(f_{*}(x) = \mathbb{E}[y\; | \; x]\)</span> es <span class="math inline">\(B\)</span>-Lipschitz con respecto a la distancia <span class="math inline">\(\Delta\)</span>.</li>
+</ol>
+</section>
+<section id="obtención-de-la-cota-general" class="slide level2 smaller scrollable">
+<h2>Obtención de la cota general</h2>
+<div class="panel-tabset">
+<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">Resultado</a></li><li><a href="#tabset-4-2">Derivación</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1">
+<p>Bajo las hipótesis anteriores, podemos obtener la siguiente cota para el error cuadrático medio: <span class="math display">\[
+    \mathbb{E}[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n] \leq B^2 \sum_{i=1}^n \hat{w}_i(x) \Delta(x_i, x)^2 + \sigma^2 \sum_{i=1}^n  \hat{w}_i(x)^2.
+\]</span> El primer término representa el sesgo del estimador, mientras que el segundo representa su varianza.</p>
+</div>
+<div id="tabset-4-2">
+<p>Para descomponer el MSE entre sesgo y varianza, se utiliza la ley de varianza total (ver <a href="#/eq-total-variance-law" class="quarto-xref">Ecuación&nbsp;2</a>) <span class="math display">\[
+\begin{align*}
+&amp; \mathbb{E}\left[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n \right] \\
+=&amp; \left( \mathbb{E}[\hat{f}(x) \;|\; x_1, \dots, x_n] - f_*(x) \right)^2 + \text{var}[\hat{f}(x) \;|\; x_1, \dots, x_n] \\
+=&amp; \mathbb{E}[\hat{f}(x) - f_*(x) \;|\; x_1, \dots, x_n]^2 + \sum_{i=1}^n \hat{w}_i(x)^2 \mathbb{E}[(y_i - \mathbb{E}[y | x_i])^2 \;|\; x_i]
+\end{align*}
+\]</span> El término bajo la primera esperanza se puede escribir como sigue <span class="math display">\[
+\begin{align*}
+&amp;\hat{f}(x) - f_*(x) \\
+=&amp; \sum_{i=1}^n y_i \hat{w}_i(x) - \mathbb{E}[y \;|\; x] \\
+=&amp; \sum_{i=1}^n \hat{w}_i(x) \left[ y_i - \mathbb{E}[y \;|\; x_i] \right] + \sum_{i=1}^n \hat{w}_i(x) \left[ \mathbb{E}[y \;|\; x_i] - \mathbb{E}[y \;|\; x] \right] \\
+=&amp; \sum_{i=1}^n \hat{w}_i(x) \left[ y_i - \mathbb{E}[y \;|\; x_i] \right] + \sum_{i=1}^n \hat{w}_i(x) \left[ f_*(x_i) - f_*(x) \right].
+\end{align*}
+\]</span> Nótese que el primer término tiene esperanza nula al condicionar a los <span class="math inline">\(x_i\)</span>, mientras que el segundo término es determinista. Obtenemos entonces una expresión que podemos acotar mediante las hipótesis: <span class="math display">\[
+\begin{align*}
+&amp; \mathbb{E}\left[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n \right] \\
+=&amp; \left[ \sum_{i=1}^n \hat{w}_i(x) \left[ f_*(x_i) - f_*(x) \right] \right]^2 + \sum_{i=1}^n \hat{w}_i(x)^2 \mathbb{E}[(y_i - \mathbb{E}[y | x_i])^2 \;|\; x_i] \\
+\leq &amp; \left[ \sum_{i=1}^n \hat{w}_i(x) B \Delta(x_i, x) \right]^2 + \sigma^2 \sum_{i=1}^n \hat{w}_i(x)^2 \\
+\leq &amp; B^2 \sum_{i=1}^n \hat{w}_i(x) \Delta(x_i, x)^2 + \sigma^2 \sum_{i=1}^n \hat{w}_i(x)^2. \\
+\end{align*}
+\]</span> La última desigualdad se tiene por desigualdad de Jensen, por convexidad de la función <span class="math inline">\(x \mapsto x^2\)</span>. Esto es lo que se buscaba obtener.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="caso-de-knn" class="slide level2 smaller scrollable">
+<h2>Caso de KNN</h2>
+<p>Reemplazando los <span class="math inline">\(\hat{w}_i(x)\)</span> para el algoritmo de KNN, se obtiene la cota <span class="math display">\[
+\begin{align*}
+    \mathbb{E}[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n] &amp;\leq \sigma^2 \sum_{i=1}^n  \hat{w}_i(x)^2 + B^2 \sum_{i=1}^n \hat{w}_i(x) \Delta(x_i, x)^2 \\
+&amp;= \sigma^2 k \cdot \left( \frac{1}{k^2} \right) + B^2 \frac{1}{k}\sum_{j=1}^{k} \Delta(x_{i_j(x)}, x)^2 \\
+&amp;= \frac{\sigma^2}{k} + \frac{B^2}{k} \sum_{j=1}^{k} \Delta(x_{i_j(x)}, x)^2 .
+\end{align*}
+\]</span> El último término corresponde al promedio empírico de los cuadrados de las distancias entre <span class="math inline">\(x\)</span> y sus <span class="math inline">\(k\)</span> vecinos más cercanos. Buscamos ahora acotar esto en términos de los datos del problema.</p>
+<div class="callout callout-warning no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Nota</strong></p>
+</div>
+<div class="callout-content">
+<p>Este es prácticamente un problema de matemática pura.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="lemas-de-distancia-esperada" class="slide level2 smaller">
+<h2>Lemas de distancia esperada</h2>
+<div class="callout callout-note no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Lema 1: Distancia esperada al vecino más cercano</strong></p>
+</div>
+<div class="callout-content">
+<p>Considere <span class="math inline">\(n+1\)</span> puntos <span class="math inline">\(x_1, \dots, x_{n+1}\)</span> obtenidos de una distribución de probabilidad con soporte compacto <span class="math inline">\(\mathcal{X} \subseteq \mathbb{R}^d\)</span>. Entonces, el valor esperado del cuadrado de la distancia <span class="math inline">\(l_{\infty}\)</span> entre <span class="math inline">\(x_{n+1}\)</span> y su vecino más cercano está acotada por <span class="math display">\[
+    4 \frac{\text{diam}(\mathcal{X})^2}{n^{ \frac{2}{d} }}.
+\]</span></p>
+</div>
+</div>
+</div>
+<div class="callout callout-note no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Lema 2: Distancia esperada al <span class="math inline">\(k\)</span>-ésimo vecino más cercano</strong></p>
+</div>
+<div class="callout-content">
+<p>Bajo las hipótesis anteriores, el valor esperado del cuadrado de la distancia <span class="math inline">\(l_{\infty}\)</span> entre <span class="math inline">\(x_{n+1}\)</span> y su <span class="math inline">\(k\)</span>-ésimo vecino más cercano está acotada por <span class="math display">\[
+    8 \text{diam}(\mathcal{X})^2 \left( \frac{2k}{n} \right)^{ \frac{2}{d} }.
+\]</span></p>
+</div>
+</div>
+</div>
+</section>
+<section id="conclusión" class="slide level2 smaller">
+<h2>Conclusión</h2>
+<p><span class="math display">\[
+    \mathbb{E}[ (\hat{f}(x) - f_*(x))^2 \;|\; x_1, \dots, x_n] \leq \frac{\sigma^2}{k} + 8B^2 \text{diam}(\mathcal{X})^2 \left( \frac{2k}{n} \right)^{ \frac{2}{d}}.
+\]</span></p>
+<ul>
+<li>Al aumentar los vecinos <span class="math inline">\(k\)</span>, el la varianza decrece pero el sesgo aumenta.</li>
+<li>A mayor dimensionalidad, se introduce mayor sesgo (tener en mente que <span class="math inline">\(\frac{k}{n} \ll 1\)</span>). Esto se conoce como <em>la maldición de la dimensionalidad</em> y en las próximas clases veremos métodos para mitigarla.</li>
+</ul>
+</section></section>
+<section>
+<section id="regresión-lineal-de-mínimos-cuadrados" class="title-slide slide level1 center">
+<h1>Regresión lineal de mínimos cuadrados</h1>
+
+</section>
+<section id="introducción" class="slide level2">
+<h2>Introducción</h2>
+<p>La regresión lineal, pese a sonar simple, es una herramienta tremendamente poderosa, flexible y bien entendida por la teoría. La utilizaremos como un ejemplo insigne que captura muchos de los balances propios del aprendizaje automático moderno.</p>
+</section>
+<section id="problema-de-mínimos-cuadrados" class="slide level2 smaller">
+<h2>Problema de mínimos cuadrados</h2>
+<p>Volviendo al aprendizaje supervisado, supongamos que disponemos de observaciones <span class="math inline">\((x_i, y_i) \in \mathcal{X} \times \mathcal{Y}, (i=1, \dots, n)\)</span>. Dado un nuevo <span class="math inline">\(x \in \mathcal{X}\)</span>, buscamos predecir su correspondiente <span class="math inline">\(y \in \mathcal{Y}\)</span> con una función <span class="math inline">\(f\)</span> tal que <span class="math inline">\(y \approx f(x)\)</span>.</p>
+<p>Para regresión, tomamos <span class="math inline">\(\mathcal{Y} = \mathbb{R}\)</span> y la función de pérdida <span class="math inline">\(l(y, z) = (y - z)^2\)</span>. Ya sabemos que el predictor óptimo es <span class="math inline">\(f_*(x) = \mathbb{E}[y | x]\)</span>, pero no podemos evaluar esto de manera exacta solo con datos.</p>
+<p>La regresión de mínimos cuadrados consiste en la categoría (nueva en este curso) de métodos de <em>minimización de riesgo empírico</em>. Dada una familia parametrizada de funciones <span class="math inline">\(f_\theta: \mathcal{X} \to \mathcal{Y} = \mathbb{R}\)</span>, en que <span class="math inline">\(\theta \in \Theta\)</span> es un parámetro, se minimiza la cantidad <span class="math display">\[
+    \frac{1}{n}\sum_{i=1}^n (y_i - f_\theta(x_i))^2.
+\]</span> Con esto, se obtiene un minimizador <span class="math inline">\(\hat{\theta}\)</span> (aleatorio!!) y el predictor óptimo <span class="math inline">\(f_{ \hat{\theta}}\)</span>.</p>
+</section>
+<section id="caso-de-mínimos-cuadrados-lineal" class="slide level2 smaller scrollable">
+<h2>Caso de mínimos cuadrados lineal</h2>
+<p>Tomemos en esta clase el caso en que la función <span class="math inline">\((x, \theta) \mapsto f_\theta(x)\)</span> es lineal en <span class="math inline">\(\theta\)</span> y por lo tanto <span class="math inline">\(\Theta = \mathbb{R}^d\)</span> para algún <span class="math inline">\(d\)</span>.</p>
+<div class="callout callout-warning no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Nota</strong></p>
+</div>
+<div class="callout-content">
+<p>Esto no significa ser lineal en <span class="math inline">\(x\)</span>.</p>
+</div>
+</div>
+</div>
+<p>Tenemos entonces la forma <span class="math display">\[
+    f_\theta(x) = \sum_{i=1}^{d} \alpha_i(x) \theta_i.
+\]</span> Esto requiere <span class="math inline">\(d\)</span> funciones ya dadas <span class="math inline">\(\alpha_i : \mathcal{X} \to \mathbb{R}\)</span> las cuales podemos agrupar en un vector <span class="math display">\[
+    \varphi(x) = (\alpha_1(x), \dots, \alpha_d(x)),
+\]</span> de donde <span class="math display">\[
+    f_\theta(x) = \varphi(x)^{\top}\theta.
+\]</span> Se minimiza entonces el riesgo empírico <span class="math display">\[
+    \hat{\mathcal{R}} = \frac{1}{n} \sum_{i=1}^n (y_i - \varphi(x_i)^{\top} \theta)^2.
+\]</span></p>
+</section>
+<section id="ejemplo-y-notación-matricial" class="slide level2">
+<h2>Ejemplo y notación matricial</h2>
+<div class="callout callout-tip no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Ejemplo</strong></p>
+</div>
+<div class="callout-content">
+<p>Si los <span class="math inline">\(\alpha_i\)</span> son monomios, tenemos <span class="math inline">\(\varphi(x) = (1, x, x^2, x^3, \dots, x^d)\)</span>, de modo que los predictores <span class="math inline">\(f_\theta(x)\)</span> son polinomios de grado <span class="math inline">\(\leq d\)</span>.</p>
+</div>
+</div>
+</div>
+<p>Si se define <span class="math inline">\(y = (y_1, \dots, y_n)\)</span> como el vector de observaciones y se agrupan los <span class="math inline">\((\varphi(x_i))_{i=1}^{n}\)</span> como filas de una matriz <span class="math inline">\(\Phi \in \mathbb{R}^{n \times d}\)</span>, el riesgo empírico se puede escribir como <span id="eq-LS-empirical-risk"><span class="math display">\[
+    \hat{\mathcal{R}}(\theta) = \frac{1}{n} \left\lVert y - \Phi \theta\right\rVert_2^2.
+\qquad(3)\]</span></span></p>
+</section>
+<section id="estimador-de-mínimos-cuadrados-ordinario" class="slide level2 smaller scrollable">
+<h2>Estimador de mínimos cuadrados ordinario</h2>
+<p>Asumamos que <span class="math inline">\(\Phi\)</span> tiene rango completo con <span class="math inline">\(n \geq d\)</span> (suficientes observaciones), esto implica que <span class="math inline">\(\Phi^{\top}\Phi \in \mathbb{R}^{d \times d}\)</span> es invertible.</p>
+<div class="callout callout-tip no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Definición: Estimador OLS</strong></p>
+</div>
+<div class="callout-content">
+<p>El estimador de mínimos cuadrados ordinario se define como el único minimizador de <a href="#/eq-LS-empirical-risk" class="quarto-xref">Ecuación&nbsp;3</a>.</p>
+</div>
+</div>
+</div>
+<div class="panel-tabset">
+<ul id="tabset-5" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-5-1">Ejercicio</a></li><li><a href="#tabset-5-2">Solución</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1">
+<p>Pruebe que el minimizador <span class="math inline">\(\hat{\theta}\)</span> se calcula como <span class="math display">\[
+    \hat{\theta} = (\Phi^{\top}\Phi)^{-1} \Phi^{\top}y.
+\]</span></p>
+</div>
+<div id="tabset-5-2">
+<p>Ya que la optimización es sin restricciones, el minimizador está dado por la condición <span class="math inline">\(\nabla \mathcal{R}( \hat{\theta}) = 0\)</span>. Expandiendo el cuadrado, tenemos <span class="math display">\[
+\begin{align*}
+    \hat{\mathcal{R}}( \theta) &amp;= \frac{1}{n} \left( \left\lVert y\right\rVert_2^2 - 2 \theta^{\top} \Phi^{\top} y + \theta^{\top} \Phi^{\top} \Phi \theta \right), \\
+\nabla \hat{\mathcal{R}}( \theta) &amp;= \frac{2}{n} \left( \Phi^{\top} \Phi \theta - \Phi^{\top} y \right).
+\end{align*}
+\]</span> Igualando a cero y usando la invertibilidad, <span class="math display">\[
+\begin{align*}
+\Phi^{\top} \Phi \hat{\theta} &amp;= \Phi^{\top} y \\
+\hat{\theta} &amp;= (\Phi^{\top} \Phi)^{-1} \Phi^{\top} y.
+\end{align*}
+\]</span></p>
+</div>
+</div>
+</div>
+</section>
+<section id="interpretación-y-aspectos-numéricos" class="slide level2 smaller">
+<h2>Interpretación y aspectos numéricos</h2>
+<ul>
+<li>El vector <span class="math inline">\(\Phi \hat{\theta} \in \mathbb{R}^n\)</span> es la proyección ortogonal de <span class="math inline">\(y\)</span> sobre <span class="math inline">\(\text{Im}(\Phi)\)</span>.</li>
+<li>Entonces, el estimador OLS entrega la única solución del sistema lineal <span class="math inline">\(\Phi\theta = \overline{y}\)</span> en que <span class="math inline">\(\overline{y}\)</span> es la proyección de <span class="math inline">\(y\)</span> sobre <span class="math inline">\(\text{Im}(\Phi)\)</span>.</li>
+<li>Invertir la matriz <span class="math inline">\(\Phi^{\top}\Phi\)</span> no es muy preferible en la práctica, se suelen preferir métodos eficientes como factorización o descenso.</li>
+</ul>
+<div class="callout callout-warning no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Comentario</strong></p>
+</div>
+<div class="callout-content">
+<p>Se aconseja evitar funciones como <code>np.linalg.inv(A)</code></p>
+</div>
+</div>
+</div>
+</section>
+<section id="análisis-estadístico-de-ols" class="slide level2">
+<h2>Análisis estadístico de OLS</h2>
+<p>Hemos discutido cómo obtener el estimador OLS <span class="math inline">\(\hat{\theta}\)</span>, pero aún no sabemos qué tan bueno es realmente, o qué factores influyen en su desempeño. Esto estudiaremos ahora.</p>
+</section>
+<section id="diseño-fijo-y-aleatorio" class="slide level2 smaller">
+<h2>Diseño fijo y aleatorio</h2>
+<p>Hay dos escenarios clásicos para este análisis</p>
+<ul>
+<li><strong>Diseño aleatorio:</strong> El clásico de aprendizaje supervisado que hemos visto hasta ahora, donde tanto entradas como salidas son aleatorias.</li>
+<li><strong>Diseño fijo:</strong> Se asume que <span class="math inline">\((x_1, \dots, x_n)\)</span> no son aleatorios aunque <span class="math inline">\((y_1, \dots, y_n)\)</span> sí lo son. En otras palabras, nos interesa predecir solo las salidas de estos puntos (<em>denoising</em>). Esto hace a <span class="math inline">\(\Phi\)</span> determinista y se minimiza <span class="math display">\[
+\begin{align*}
+\mathcal{R}(\theta) &amp;= \mathbb{E}_y \left[ \frac{1}{n}\sum_{i=1}^n (y_i - \varphi(x_i)^{\top} \theta)^2 \right] \\
+&amp;= \mathbb{E}_y \left[ \frac{1}{n} \left\lVert y - \Phi \theta\right\rVert_2^2 \right].
+\end{align*}
+\]</span></li>
+</ul>
+</section>
+<section id="hipótesis" class="slide level2">
+<h2>Hipótesis</h2>
+<p>Tomamos diseño fijo y suponemos <span class="math inline">\(\hat{\Sigma} = \frac{1}{n}\Phi^{\top}\Phi\)</span> invertible. También asumimos lo siguiente sobre la distribución:</p>
+<ul>
+<li>Existe <span class="math inline">\(\theta_* \in \mathbb{R}^d\)</span> tal que la relación entre <span class="math inline">\(x_i\)</span> e <span class="math inline">\(y_i\)</span> toma la forma <span class="math display">\[
+  y_i = \varphi(x_i)^{\top}\theta_* + \varepsilon_i.
+\]</span></li>
+<li>Además, <span class="math inline">\((\varepsilon_i)_{i=1}^n\)</span> son independientes con <span class="math inline">\(\mathbb{E}[\varepsilon_i] =0\)</span> y <span class="math inline">\(\mathbb{E}[\varepsilon_i^2] = \sigma^2\)</span>.</li>
+</ul>
+</section>
+<section id="descomposición-de-riesgo" class="slide level2 smaller scrollable">
+<h2>Descomposición de riesgo</h2>
+<p>Sea <span class="math inline">\(\mathcal{R}^*\)</span> el valor mínimo de <span class="math inline">\(\mathcal{R}(\theta)\)</span> sobre <span class="math inline">\(\theta \in \mathbb{R}^d\)</span>. Entones, tenemos lo siguiente:</p>
+<div class="panel-tabset">
+<ul id="tabset-6" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-6-1">Proposición</a></li><li><a href="#tabset-6-2">Demostración</a></li></ul>
+<div class="tab-content">
+<div id="tabset-6-1">
+<p>Para cada <span class="math inline">\(\theta \in \mathbb{R}^d\)</span>, tenemos <span class="math inline">\(\mathcal{R}^* = \sigma^2\)</span> y <span class="math display">\[
+    \mathcal{R}(\theta) - \mathcal{R}^* = \left\lVert\theta - \theta_*\right\rVert_{ \hat{\Sigma}}^2,
+\]</span> en que <span class="math inline">\(\hat{\Sigma} = \frac{1}{n} \Phi^{\top}\Phi\)</span> y <span class="math inline">\(\left\lVert\theta\right\rVert_{ \hat{\Sigma}}^2 = \theta^{\top} \hat{\Sigma} \theta\)</span>. Si ahora <span class="math inline">\(\hat{\theta}\)</span> es aleatorio, entonces <span class="math display">\[
+    \mathbb{E}[\mathcal{R}( \hat{\theta})] - \mathcal{R}^* = \left\lVert\mathbb{E}[ \hat{\theta}] - \theta_*\right\rVert_{ \hat{\Sigma}}^{2} + \mathbb{E} \left[ \left\lVert \hat{\theta} - \mathbb{E}[ \hat{\theta}] \right\rVert_{ \hat{\Sigma}}^{2} \right].
+\]</span></p>
+</div>
+<div id="tabset-6-2">
+<p>Ya que <span class="math inline">\(y = \Phi \theta_* + \varepsilon\)</span>, tenemos <span class="math display">\[
+\begin{align*}
+\mathcal{R}(\theta) &amp;= \mathbb{E}_y \left[ \frac{1}{n} \left\lVert y - \Phi \theta\right\rVert_2^2 \right] \\
+&amp;= \mathbb{E}_\varepsilon\left[ \frac{1}{n} \left\lVert \Phi(\theta_* - \theta) + \varepsilon\right\rVert_2^2 \right] \\
+&amp;= \frac{1}{n} \mathbb{E}_\varepsilon\left[ \left\lVert \Phi(\theta_* - \theta)\right\rVert_2^2 + \left\lVert\varepsilon\right\rVert_2^2 + 2 ( \Phi(\theta_* - \theta))^{\top} \varepsilon\right] \\
+&amp;= \sigma^2 + \frac{1}{n} (\theta_* - \theta)^{\top} \Phi^{\top} \Phi(\theta_* - \theta) \\
+&amp;= \sigma^2 + \left\lVert\theta_* -\theta\right\rVert_{ \hat{\Sigma}}^2.
+\end{align*}
+\]</span> Esta expresión se minimiza en <span class="math inline">\(\theta_*\)</span> con valor mínimo <span class="math inline">\(\mathcal{R}^* = \sigma^2\)</span> y se tiene el riesgo marginal pedido.</p>
+<p>Si ahora se supone <span class="math inline">\(\hat{\theta}\)</span> aleatorio, se puede emplear lo anterior junto con la ley de varianza total para vectores: <span class="math display">\[
+    \mathbb{E} \left[ \left\lVert z - a\right\rVert_M^2 \right] = \left\lVert \mathbb{E}[z] - a \right\rVert_M^2 + \mathbb{E} \left[ \left\lVert z - \mathbb{E}[z]\right\rVert_M^2 \right]
+\]</span> para concluir.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="comentario-1" class="slide level2">
+<h2>Comentario</h2>
+<p>La descomposición anterior nos dice que para cualquier estimador <span class="math inline">\(\hat{\theta}\)</span> (como OLS, pero no solo ese!), nos basta conocer su esperanza y varianza para deducir su riesgo marginal asociado.</p>
+<p>Estudiaremos entonces las propiedades del estimador <span class="math display">\[
+    \hat{\theta} = (\Phi^{\top}\Phi)^{-1} \Phi^{\top} y = \hat{\Sigma}^{-1} \left( \frac{1}{n}\Phi^{\top}y \right)
+\]</span> con respecto al modelo <span class="math display">\[
+    y = \Phi\theta_* + \varepsilon.
+\]</span></p>
+</section>
+<section id="propiedades-del-estimador-ols" class="slide level2 smaller scrollable">
+<h2>Propiedades del estimador OLS</h2>
+<div class="panel-tabset">
+<ul id="tabset-7" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-7-1">Proposición</a></li><li><a href="#tabset-7-2">Demostración</a></li></ul>
+<div class="tab-content">
+<div id="tabset-7-1">
+<ol type="1">
+<li><span class="math inline">\(\theta\)</span> es insesgado: <span class="math inline">\(\mathbb{E}[ \hat{\theta}] = \theta_*\)</span>.</li>
+<li><span class="math inline">\(\hat{\theta}\)</span> tiene varianza dada por <span class="math display">\[
+\text{var}( \hat{\theta}) = \mathbb{E} \left[ ( \hat{\theta} - \theta_*)( \hat{\theta} - \theta_*)^{\top} \right] = \frac{\sigma^2}{n} \hat{\Sigma}^{-1}.
+\]</span></li>
+</ol>
+</div>
+<div id="tabset-7-2">
+<ol type="1">
+<li>Por la linealidad de la esperanza, <span class="math display">\[
+\begin{align*}
+\mathbb{E}[ \hat{\theta}] &amp;= (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \mathbb{E}[y] \\
+&amp;= (\Phi^{\top}\Phi)^{-1} \Phi^{\top}\Phi \theta_* \\
+&amp;= \theta_*
+\end{align*}
+\]</span></li>
+<li>Vemos que <span id="eq-LS-analysis-identity"><span class="math display">\[
+\begin{align*}
+\hat{\theta} - \theta &amp;= (\Phi^{\top}\Phi)^{-1} \Phi^{\top} (\Phi \theta_* + \varepsilon) - \theta_* \\
+&amp;= (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \varepsilon.
+\end{align*}
+\qquad(4)\]</span></span> Ya que <span class="math inline">\(\mathbb{E}[\varepsilon\varepsilon^{\top}] = \sigma^2 I\)</span>, tenemos <span class="math display">\[
+\begin{align*}
+\text{var}( \hat{\theta}) &amp;= \mathbb{E} \left[ (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \varepsilon\varepsilon^{\top} \Phi( \Phi^{\top} \Phi)^{-1} \right] \\
+&amp;= \sigma^2 (\Phi^{\top}\Phi)^{-1} = \frac{\sigma^2}{n} \hat{\Sigma}^{-1}.
+\end{align*}
+\]</span></li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="conclusión-1" class="slide level2 smaller scrollable">
+<h2>Conclusión</h2>
+<p>Juntando lo anterior, obtenemos lo siguiente</p>
+<div class="panel-tabset">
+<ul id="tabset-8" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-8-1">Proposición</a></li><li><a href="#tabset-8-2">Demostración</a></li></ul>
+<div class="tab-content">
+<div id="tabset-8-1">
+<p>El riesgo marginal del estimador OLS está dado por <span class="math display">\[
+    \mathbb{E}[\mathcal{R}( \hat{\theta})] - \mathcal{R}^* = \frac{\sigma^2d}{n}.
+\]</span></p>
+</div>
+<div id="tabset-8-2">
+<p>Usando <a href="#/eq-LS-analysis-identity" class="quarto-xref">Ecuación&nbsp;4</a>, <span class="math display">\[
+\begin{align*}
+\mathbb{E}[\mathcal{R}( \hat{\theta})] - \mathcal{R}^* &amp;= \mathbb{E} \left[ \left\lVert (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \varepsilon\right\rVert_{ \hat{\Sigma}}^2 \right] \\
+&amp;= \frac{1}{n} \mathbb{E} \left[ \varepsilon^{\top} \Phi (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \Phi (\Phi^{\top}\Phi)^{-1} \Phi^{\top} \varepsilon\right] \\
+&amp;= \frac{1}{n} \mathbb{E} \left[ \varepsilon^{\top} \underbrace{ \Phi (\Phi^{\top}\Phi)^{-1} \Phi^{\top} }_{=\Pi} \varepsilon\right] \\
+&amp;= \frac{1}{n} \mathbb{E} [\varepsilon^{\top} \Pi \varepsilon] \\
+&amp;= \frac{1}{n} \mathbb{E}[ \text{tr} (\Pi \varepsilon\varepsilon^{\top})] \\
+&amp;= \frac{\sigma^2}{n} \text{tr}(\Pi) = \frac{\sigma^2d}{n}.
+\end{align*}
+\]</span></p>
+</div>
+</div>
+</div>
+<div class="callout callout-warning no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Nota</strong></p>
+</div>
+<div class="callout-content">
+<p>Se aprecia maldición de la dimensionalidad.</p>
+</div>
+</div>
+</div>
+
+</section></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
