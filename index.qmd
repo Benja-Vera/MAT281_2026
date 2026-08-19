@@ -4,9 +4,13 @@ title: "Aplicaciones de la Matemática en Ingeniería"
 subtitle: "MAT281 - Semestre Primavera 2026"
 author: "Benjamín Vera"
 format:
+    html:
+        callout-icon: false
+        theme: [sketchy, custom.scss]
     revealjs:
         callout-icon: false
         theme: dark
+        output-file: "presentation.html"
 ---
 ::: {.content-hidden}
 {{< include _macros.qmd >}}

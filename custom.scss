@@ -1,0 +1,21 @@
+/*-- scss:defaults --*/
+
+// $code-bg:                        #333333 !default;
+// $code-color:                     #ffffff !default;
+
+/* Callout header corner fix for sketchy theme */
+.callout {
+  /* Clips the header's background color to the parent container's rounded borders */
+  overflow: hidden; 
+
+  .callout-header {
+    /* Inherit border-radius styles from the outer block */
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+  }
+
+  .callout-title-container {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+  }
+}
