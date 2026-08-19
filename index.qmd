@@ -28,7 +28,7 @@ El curso busca desarrollar herramientas para la modelación matemática de probl
 - Dos tareas a lo largo del semestre (50%).
 - Proyecto final (50%).
 
-## Código
+## Código {.smaller}
 
 Existen múltiples lenguajes/librerías/plataformas en las cuales se implementan los algoritmos de análisis y aprendizaje que veremos en este curso:
 
@@ -38,8 +38,6 @@ Existen múltiples lenguajes/librerías/plataformas en las cuales se implementan
 - `SciML` (`julia`)
 - `R`
 - `Fabric` / `Azure ML` / `Excel` (`Microsoft`)
-
----
 
 Para intenciones pedagógicas, no se utilizará ninguna de estas librerías especializadas. Ya que mucha atención a los detalles de cada paquete puede distraer de la idea nuclear de los algoritmos.
 
@@ -221,7 +219,7 @@ A desarrollar.
 
 :::
 
-## Ejercicio: Predictor de Bayes en problema de regresión {.smaller}
+## Ejercicio: Predictor de Bayes en problema de regresión {.smaller .scrollable}
 
 ::: {.panel-tabset}
 
@@ -238,7 +236,25 @@ $$
 
 ### Solución
 
-A desarrollar.
+1. Vemos que
+$$
+\begin{align*}
+\text{var}[y] + \left( \mathbb{E}[y] - a \right)^2 &= \mathbb{E}[y^2] - \mathbb{E}[y]^2 + \mathbb{E}[y]^2 - 2a \mathbb{E}[y] + a^2 \\
+&= \mathbb{E}[y^2 - 2ay + a^2] \\
+&= \mathbb{E}[(y - a)^2].
+\end{align*}
+$$
+2. Esto se puede ver usando (1), ya que el riesgo condicional es dado por
+$$
+\begin{align*}
+r(z|x') &= \mathbb{E}[(y - z)^2 | x=x'] \\
+&= \mathbb{E}[ (y - \mathbb{E}[y | x=x'])^2 | x=x'] + (z - \mathbb{E}[y | x=x'])^2.
+\end{align*}
+$$
+Minimizar esto con respecto a $z$ se reduce entonces solo a estudiar el segundo término, el cual se minimiza en
+$$
+    z^* = f_*(x') = \mathbb{E}[y | x = x'].
+$$
 
 :::
 
@@ -306,7 +322,10 @@ A continuación, hacemos una regresión de vecinos más cercanos donde estimamos
 $$
     f(x) = x\cdot(1 - x)
 $$
-en base a datos $x_i$ de distribución uniforme en $[0, 1]$ y datos $y_i$ obtenidos con una perturbación gaussiana. ## Código
+en base a datos $x_i$ de distribución uniforme en $[0, 1]$ y datos $y_i$ obtenidos con una perturbación gaussiana.
+
+## Código
+
 ```{.python}
 import numpy as np
 from scipy.stats import uniform, norm

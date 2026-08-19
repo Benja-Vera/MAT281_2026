@@ -228,7 +228,7 @@ Benjamín Vera
 <li>Proyecto final (50%).</li>
 </ul>
 </section>
-<section id="código" class="slide level2">
+<section id="código" class="slide level2 smaller">
 <h2>Código</h2>
 <p>Existen múltiples lenguajes/librerías/plataformas en las cuales se implementan los algoritmos de análisis y aprendizaje que veremos en este curso:</p>
 <ul>
@@ -239,9 +239,6 @@ Benjamín Vera
 <li><code>R</code></li>
 <li><code>Fabric</code> / <code>Azure ML</code> / <code>Excel</code> (<code>Microsoft</code>)</li>
 </ul>
-</section>
-<section class="slide level2">
-
 <p>Para intenciones pedagógicas, no se utilizará ninguna de estas librerías especializadas. Ya que mucha atención a los detalles de cada paquete puede distraer de la idea nuclear de los algoritmos.</p>
 <p>Se preferirá un repositorio de <code>python</code> construido dedicadamente para hacer legibles los algoritmos, sacrificando algo de rendimiento que no necesitamos aún.</p>
 </section></section>
@@ -438,7 +435,7 @@ Benjamín Vera
 </div>
 </div>
 </section>
-<section id="ejercicio-predictor-de-bayes-en-problema-de-regresión" class="slide level2 smaller">
+<section id="ejercicio-predictor-de-bayes-en-problema-de-regresión" class="slide level2 smaller scrollable">
 <h2>Ejercicio: Predictor de Bayes en problema de regresión</h2>
 <div class="panel-tabset">
 <ul id="tabset-3" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-3-1">Ejercicio</a></li><li><a href="#tabset-3-2">Solución</a></li></ul>
@@ -454,7 +451,23 @@ f_*(x') = \mathbb{E}[y | x = x'].
 </ol>
 </div>
 <div id="tabset-3-2">
-<p>A desarrollar.</p>
+<ol type="1">
+<li>Vemos que <span class="math display">\[
+\begin{align*}
+\text{var}[y] + \left( \mathbb{E}[y] - a \right)^2 &amp;= \mathbb{E}[y^2] - \mathbb{E}[y]^2 + \mathbb{E}[y]^2 - 2a \mathbb{E}[y] + a^2 \\
+&amp;= \mathbb{E}[y^2 - 2ay + a^2] \\
+&amp;= \mathbb{E}[(y - a)^2].
+\end{align*}
+\]</span></li>
+<li>Esto se puede ver usando (1), ya que el riesgo condicional es dado por <span class="math display">\[
+\begin{align*}
+r(z|x') &amp;= \mathbb{E}[(y - z)^2 | x=x'] \\
+&amp;= \mathbb{E}[ (y - \mathbb{E}[y | x=x'])^2 | x=x'] + (z - \mathbb{E}[y | x=x'])^2.
+\end{align*}
+\]</span> Minimizar esto con respecto a <span class="math inline">\(z\)</span> se reduce entonces solo a estudiar el segundo término, el cual se minimiza en <span class="math display">\[
+z^* = f_*(x') = \mathbb{E}[y | x = x'].
+\]</span></li>
+</ol>
 </div>
 </div>
 </div>
@@ -539,7 +552,10 @@ f_{\theta}: \mathcal{X} \to \mathcal{Y}, \qquad (\theta \in \Theta)
 <h2>Ejemplo ilustrativo</h2>
 <p>A continuación, hacemos una regresión de vecinos más cercanos donde estimamos la función <span class="math display">\[
     f(x) = x\cdot(1 - x)
-\]</span> en base a datos <span class="math inline">\(x_i\)</span> de distribución uniforme en <span class="math inline">\([0, 1]\)</span> y datos <span class="math inline">\(y_i\)</span> obtenidos con una perturbación gaussiana. ## Código</p>
+\]</span> en base a datos <span class="math inline">\(x_i\)</span> de distribución uniforme en <span class="math inline">\([0, 1]\)</span> y datos <span class="math inline">\(y_i\)</span> obtenidos con una perturbación gaussiana.</p>
+</section>
+<section id="código-1" class="slide level2">
+<h2>Código</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href=""></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href=""></a><span class="im">from</span> scipy.stats <span class="im">import</span> uniform, norm</span>
 <span id="cb1-3"><a href=""></a><span class="im">from</span> matplotlib <span class="im">import</span> pyplot <span class="im">as</span> plt</span>
