@@ -662,7 +662,7 @@ $$
 en que $\hat{\Sigma} = \frac{1}{n} \Phi^{\top}\Phi$ y $\norm{\theta}_{ \hat{\Sigma}}^2 = \theta^{\top} \hat{\Sigma} \theta$. Si ahora $\hat{\theta}$ es aleatorio, entonces
 $$
     \mathbb{E}[\mathcal{R}( \hat{\theta})] - \mathcal{R}^* = \norm{\mathbb{E}[ \hat{\theta}] - \theta_*}_{ \hat{\Sigma}}^{2} + \mathbb{E} \left[ \norm{ \hat{\theta} - \mathbb{E}[ \hat{\theta}] }_{ \hat{\Sigma}}^{2} \right].
-$$
+$$ {#eq-LS-bias-variance-tradeoff}
 
 ### Demostración
 
@@ -739,7 +739,7 @@ $$
 
 :::
 
-## Conclusión {.smaller .scrollable}
+## Riesgo marginal de OLS {.smaller .scrollable}
 
 Juntando lo anterior, obtenemos lo siguiente
 
@@ -774,6 +774,156 @@ $$
 ### Nota
 
 Se aprecia maldición de la dimensionalidad.
+
+:::
+
+## Regularización: Mitigando la maldición
+
+Cuando $\frac{d}{n} \to 1$, tendremos problemas de generalización al estar memorizando los datos de entrenamiento. Y si $d > n$, entonces $\Phi^{\top}\Phi$ ya no es invertible, de modo que el estimador OLS no queda bien definido.
+
+Vamos a mitigar esto agregando un término de penalización a la función objetivo de la regresión.
+
+## Regresión Ridge
+
+::: {.callout-tip}
+
+### Definición: Estimador RLS
+
+Dado $\lambda > 0$, el estimados de mínimos cuadrados ridge se define como el minimizador $\hat{\theta}_\lambda$ de
+$$
+    \min_{\theta \in \mathbb{R}^d} \frac{1}{n} \norm{y - \Phi \theta}_2^2 + \lambda \norm{\theta}_2^2.
+$$
+:::
+
+Este estimador $\hat{\theta}_\lambda$ también se puede calcular en forma explícita.
+
+## Fórmula para RLS {.smaller .scrollable}
+
+::: {.panel-tabset}
+
+### Propiedad
+
+Se tiene
+$$
+    \hat{\theta}_\lambda = \frac{1}{n} (\hat{\Sigma} + \lambda I)^{-1} \Phi^{\top} y.
+$$
+
+### Demostración
+
+El riesgo modificado se puede escribir como
+$$
+\begin{align*}
+\mathcal{R}(\theta) &= \frac{1}{n} (y - \Phi\theta)^{\top}(y - \Phi\theta) + \lambda \theta^{\top} I \theta \\
+&= \frac{1}{n} \left( \norm{y}_2^2 - 2 y^{\top} \Phi \theta + \theta^{\top}\Phi^{\top} \Phi \theta \right) + \lambda \theta^{\top} I \theta.
+\end{align*}
+$$
+De este modo, calculamos el gradiente como sigue
+$$
+\begin{align*}
+\nabla \mathcal{R}(\theta) &= \frac{1}{n} \left( -2 \Phi^{\top} y + 2 \Phi^{\top}\Phi \theta \right) + 2 \lambda I \theta \\
+&= 2 \left( \frac{1}{n} \Phi^{\top}\Phi + \lambda I \right)\theta - \frac{2}{n} \Phi^{\top} y.
+\end{align*}
+$$
+El minimizador $\hat{\theta}_\lambda$ satisface entonces
+$$
+    \left( \hat{\Sigma} + \lambda I \right) \hat{\theta}_\lambda = \frac{1}{n} \Phi^{\top} y.
+$$
+Note que ya que $\hat{\Sigma} \geq 0$, $\hat{\Sigma} + \lambda I$ es invertible para cualquier $\lambda > 0$. Así, se obtiene lo pedido.
+
+:::
+
+## Riesgo marginal de RLS {.smaller .scrollable}
+
+::: {.panel-tabset}
+
+### Proposición
+
+Bajo el modelo $y = \Phi \theta_* + \epsilon$ estudiado anteriormente, y manteniendo la hipótesis de diseño fijo, el estimador $\hat{\theta}_\lambda = \frac{1}{n} (\hat{\Sigma} + \lambda I)^{-1} \Phi^{\top}y$ tiene riesgo marginal
+$$
+    \mathbb{E} \left[ \mathcal{R}(\hat{\theta}_\lambda) \right] - \mathcal{R}^* = \lambda^2 \theta_*^{\top} \left( \hat{\Sigma} + \lambda I  \right)^{-2} \hat{\Sigma} \theta_* + \frac{\sigma^2}{n} \text{tr}\left[ \hat{\Sigma}^2 (\hat{\Sigma} + \lambda I)^{-2} \right].
+$$
+
+### Demostración
+
+Calculamos la esperanza del estimador:
+$$
+\begin{align*}
+\mathbb{E} \left[ \hat{\theta}_\lambda \right] &= \frac{1}{n} \left( \hat{\Sigma} + \lambda I \right)^{-1} \Phi^{\top} \Phi \theta_* \\
+&= \left( \hat{\Sigma} + \lambda I \right)^{-1} \hat{\Sigma} \theta_* \\
+&= \left( \hat{\Sigma} +\lambda I \right)^{-1} \left( \hat{\Sigma} + \lambda I - \lambda I \right) \theta_* \\
+&= \theta_* - \lambda \left( \hat{\Sigma} +\lambda I \right)^{-1} \theta_*.
+\end{align*}
+$$
+Ahora, vemos el término de varianza:
+$$
+\begin{align*}
+V &= \mathbb{E} \left[ \norm{ \hat{\theta}_\lambda - \mathbb{E}[ \hat{\theta}_\lambda]}_{ \hat{\Sigma}}^2 \right] \\
+&= \mathbb{E} \left[ \norm{ ( \hat{\Sigma} + \lambda I)^{-1} \left( \frac{1}{n} \Phi^{\top} (\Phi \theta_* + \epsilon) - \hat{\Sigma} \theta_* \right) }_{ \hat{\Sigma}}^2 \right] \\
+&= \mathbb{E} \left[ \norm{ \frac{1}{n} ( \hat{\Sigma} + \lambda I)^{-1} \Phi^{\top} \epsilon }_{ \hat{\Sigma}}^2 \right] \\
+&= \mathbb{E} \left[  \frac{1}{n^2} \text{tr} \left( \epsilon^{\top} \Phi ( \hat{\Sigma} + \lambda I)^{-1} \hat{\Sigma} ( \hat{\Sigma} + \lambda I)^{-1} \Phi^{\top} \epsilon \right) \right] \\
+&= \mathbb{E} \left[ \frac{1}{n^2} \text{tr} \left(  \Phi^{\top} \epsilon \epsilon^{\top} \Phi ( \hat{\Sigma} + \lambda I)^{-1} \hat{\Sigma} ( \hat{\Sigma} + \lambda I)^{-1} \right) \right] \\
+&= \frac{\sigma^2}{n} \text{tr} \left( \hat{\Sigma} ( \hat{\Sigma} + \lambda I)^{-1} \hat{\Sigma} ( \hat{\Sigma} + \lambda I)^{-1} \right) \\
+&= \frac{\sigma^2}{n} \text{tr} \left( \hat{\Sigma}^2 ( \Sigma + \lambda I)^{-2} \right).
+\end{align*}
+$$
+La última igualdad se debe a la conmutatividad de $\hat{\Sigma}$ y $(\hat{\Sigma} + \lambda I)^{-1}$. Así, por @eq-LS-bias-variance-tradeoff,
+$$
+\begin{align*}
+\mathbb{E} \left[ \mathcal{R}( \hat{\theta}_\lambda) \right] - \mathcal{R}^* &= \norm{ \mathbb{E}[ \hat{\theta}_\lambda] - \theta_* }_{ \hat{\Sigma}}^2 + \mathbb{E} \left[  \norm{\hat{\theta}_\lambda - \mathbb{E}[ \hat{\theta}_\lambda]}_{ \hat{\Sigma}}^2 \right] \\
+&=: B + V.
+\end{align*}
+$$
+Ya que
+$$
+\begin{align*}
+B &= \norm{ \mathbb{E}[ \hat{\theta}_\lambda] - \theta_*}_{ \hat{\Sigma}}^2 \\
+&= \norm{ \lambda \left( \hat{\Sigma} + \lambda I \right)^{-1} \theta_*}_{ \hat{\Sigma}}^2 \\
+&= \lambda^2 \theta_*^{\top} \left( \hat{\Sigma} + \lambda I \right)^{-1} \hat{\Sigma} \left( \hat{\Sigma} + \lambda I  \right)^{-1} \theta_* \\
+&= \lambda^2 \theta_*^{\top} \left( \hat{\Sigma} + \lambda I \right)^{-2} \hat{\Sigma} \theta_*,
+\end{align*}
+$$
+se obtiene lo pedido al sumar los dos términos.
+
+:::
+
+## ¿Es esto independiente de $d$? {.smaller .scrollable}
+
+::: {.panel-tabset}
+
+### Ejercicio
+
+Considere la notación $\mathbb{E}[ \mathcal{R}( \hat{\theta}_\lambda)] - \mathcal{R}^* = B + V$ de la proposición anterior:
+
+1. Pruebe que
+$$
+    B \leq \frac{\lambda}{2} \norm{ \theta_*}_2^2.
+$$
+Para esto, puede utilizar sin demostración que los valores propios de $\left( \hat{\Sigma} + \lambda I \right)^{-2} \lambda \hat{\Sigma}$ son no mayores a $\frac{1}{2}$.
+2. Pruebe que
+$$
+    V \leq \frac{\sigma^2 \text{tr}(\hat{\Sigma})}{2\lambda n}.
+$$
+3. Utilizando que una función del tipo
+$$
+    \lambda \mapsto a\lambda + \frac{b}{\lambda},
+$$
+con $a,b > 0$, se minimiza para $\lambda = \sqrt{b / a}$ con valor óptimo $2 \sqrt{ab}$, concluya que
+$$
+    \mathbb{E}[ \mathcal{R}( \hat{\theta}_*)] - \mathcal{R}^* \leq \frac{ \sigma \text{tr}( \hat{\Sigma})^{1 / 2} \norm{\theta_*}_2}{\sqrt{n}},
+$$
+con la elección óptima
+$$
+    \lambda_* = \frac{ \sigma \text{tr}( \hat{\Sigma})^{1 / 2}}{\norm{ \theta_*}_2 \sqrt{n}}.
+$$
+4. Denotando $R = \max_{i \in \{ 1, \dots, n \}} \norm{ \phi(x_i)}_2$, pruebe que
+$$
+    \text{tr}(\hat{\Sigma}) \leq R^2.
+$$
+5. Concluya.
+
+### Demostración
+
+Propuesto como ejercicio.
 
 :::
 
