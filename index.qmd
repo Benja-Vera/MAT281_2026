@@ -550,7 +550,7 @@ $$
 
 ## Ejemplo y notación matricial
 
-::: {.callout-tip}
+::: {.callout-note}
 
 ### Ejemplo
 
